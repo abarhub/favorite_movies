@@ -56,6 +56,51 @@ def fetch_movie_trailer(movie_id):
     return None
 
 
+_credits_cache = {}
+
+
+def fetch_movie_credits(movie_id):
+    if movie_id in _credits_cache:
+        return _credits_cache[movie_id]
+
+    r = requests.get(
+        f"{BASE_URL}/movie/{movie_id}/credits",
+        params={"api_key": API_KEY, "language": "fr-FR"},
+    )
+    r.raise_for_status()
+    data = r.json()
+
+    director = next(
+        (p["name"] for p in data.get("crew", []) if p["job"] == "Director"),
+        None,
+    )
+    cast = [
+        {"name": p["name"], "character": p.get("character", "")}
+        for p in data.get("cast", [])[:4]
+    ]
+
+    result = {"director": director, "cast": cast}
+    _credits_cache[movie_id] = result
+    return result
+
+
+_tmdb_reco_cache = {}
+
+
+def fetch_tmdb_recommendations(movie_id):
+    if movie_id in _tmdb_reco_cache:
+        return _tmdb_reco_cache[movie_id]
+
+    r = requests.get(
+        f"{BASE_URL}/movie/{movie_id}/recommendations",
+        params={"api_key": API_KEY, "language": "fr-FR"},
+    )
+    r.raise_for_status()
+    movie_ids = {m["id"] for m in r.json().get("results", [])}
+    _tmdb_reco_cache[movie_id] = movie_ids
+    return movie_ids
+
+
 _genres_cache = None
 
 

@@ -66,6 +66,18 @@
                 {% endfor %}
               </div>
 
+              {% set credits = get_credits(movie.id) %}
+              <div class="credits">
+                {% if credits.director %}
+                  <span class="credit-director">🎬 {{ credits.director }}</span>
+                {% endif %}
+                {% if credits.cast %}
+                  <span class="credit-cast">
+                    🎭 {{ credits.cast | map(attribute='name') | join(', ') }}
+                  </span>
+                {% endif %}
+              </div>
+
               <p class="overview">{{ movie.overview or "Pas de synopsis disponible." }}</p>
 
               <div class="card-actions">
