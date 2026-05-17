@@ -13,7 +13,7 @@ BASE_URL = "https://api.themoviedb.org/3"
 PREFERENCES_FILE = Path("preferences.json")
 
 
-def fetch_upcoming_movies(days=7):
+def fetch_upcoming_movies(days=30):
     today = date.today()
     end_date = today + timedelta(days=days)
 
@@ -21,9 +21,10 @@ def fetch_upcoming_movies(days=7):
         "api_key": API_KEY,
         "language": "fr-FR",
         "region": "FR",
-        "sort_by": "primary_release_date.asc",
-        "primary_release_date.gte": today.isoformat(),
-        "primary_release_date.lte": end_date.isoformat(),
+        "sort_by": "release_date.asc",
+        "with_release_type": "3",  # sorties cinéma uniquement
+        "release_date.gte": today.isoformat(),
+        "release_date.lte": end_date.isoformat(),
     }
 
     r = requests.get(f"{BASE_URL}/discover/movie", params=params)
@@ -94,7 +95,7 @@ def ask_preference(movie, preferences):
 
 
 def main():
-    print("Films à venir dans les 7 prochains jours en France")
+    print("Films à venir dans les 30 prochains jours en France (sorties cinéma)")
 
     movies = fetch_upcoming_movies(days=7)
 
