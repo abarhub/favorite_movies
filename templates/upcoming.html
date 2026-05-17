@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prochains films</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="{{ url_for('upcoming') }}" class="active">🗓 Prochains films</a>
+    <a href="{{ url_for('movies') }}">🔍 Recherche</a>
+    <a href="{{ url_for('recommendations') }}">⭐ Recommandations</a>
+    <a href="{{ url_for('stats') }}">📊 Stats</a>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">🗓 Prochains films</h1>
+
+    {% if not week_labels %}
+      <p class="empty-state">Aucun film à venir dans les prochaines semaines.</p>
+    {% else %}
+
+      <div class="week-selector">
+        {% for idx, label, count in week_labels %}
+          <a href="?week={{ idx }}"
+             class="week-btn {% if idx == selected_week %}active{% endif %}">
+            {{ label }}
+            <span class="week-count">{{ count }}</span>
+          </a>
+        {% endfor %}
+      </div>
+
+      <h2 class="week-title">{{ selected_week_label }}</h2>
+
+      {% if not selected_movies %}
+        <p class="empty-state">Aucun film cette semaine.</p>
+      {% else %}
+        <div class="movie-list">
+          {% for movie in selected_movies %}
+            {% set pref = get_preference(movie.id) %}
+            <div class="movie-card {% if pref %}rated-{{ pref }}{% endif %}">
+              <div class="reco-poster">
+                {% set poster = get_poster_url(movie.poster_path) %}
+                {% if poster %}
+                  <img src="{{ poster }}" alt="{{ movie.title }}">
+                {% else %}
+                  <div class="no-poster small">Pas d'affiche</div>
+                {% endif %}
+              </div>
+
+              <div class="reco-info">
+                <h2>{{ movie.title }}</h2>
+
+                <div class="meta">
+                  <span>📅 {{ movie.release_date }}</span>
+                  <span>⭐ {{ "%.1f"|format(movie.vote_average) }}/10
+                    <small>({{ movie.vote_count }} votes)</small>
+                  </span>
+                </div>
+
+                <div class="genre-tags">
+                  {% for gid in movie.genre_ids %}
+                    <span class="genre-tag">{{ genres_map.get(gid, '') }}</span>
+                  {% endfor %}
+                </div>
+
+                {% set credits = get_credits(movie.id) %}
+                <div class="credits">
+                  {% if credits.director %}
+                    <span class="credit-director">🎬 {{ credits.director }}</span>
+                  {% endif %}
+                  {% if credits.cast %}
+                    <span class="credit-cast">🎭 {{ credits.cast | map(attribute='name') | join(', ') }}</span>
+                  {% endif %}
+                </div>
+
+                <p class="overview">{{ movie.overview or "Pas de synopsis disponible." }}</p>
+
+                <div class="card-actions">
+                  <a href="{{ url_for('trailer', movie_id=movie.id) }}"
+                     target="_blank" class="btn btn-trailer">▶ Bande-annonce</a>
+
+                  <form action="{{ url_for('rate') }}" method="post" class="inline-form">
+                    <input type="hidden" name="movie_id" value="{{ movie.id }}">
+                    <input type="hidden" name="genre_ids" value="{{ movie.genre_ids | tojson }}">
+                    <input type="hidden" name="title" value="{{ movie.title }}">
+                    <input type="hidden" name="next_url" value="{{ request.url }}">
+                    <button type="submit" name="choice" value="like"
+                            class="btn btn-like {% if pref == 'like' %}btn-active{% endif %}">👍</button>
+                    <button type="submit" name="choice" value="to_watch"
+                            class="btn btn-watch {% if pref == 'to_watch' %}btn-active{% endif %}">🔖</button>
+                    <button type="submit" name="choice" value="skip"
+                            class="btn btn-skip {% if pref == 'skip' %}btn-active{% endif %}">⏭</button>
+                    <button type="submit" name="choice" value="dislike"
+                            class="btn btn-dislike {% if pref == 'dislike' %}btn-active{% endif %}">👎</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</body>
+</html>

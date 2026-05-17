@@ -8,13 +8,14 @@
 </head>
 <body>
   <nav class="navbar">
-    <a href="{{ url_for('movies') }}" class="active">🎬 Films</a>
+    <a href="{{ url_for('upcoming') }}">🗓 Prochains films</a>
+    <a href="{{ url_for('movies') }}" class="active">🔍 Recherche</a>
     <a href="{{ url_for('recommendations') }}">⭐ Recommandations</a>
     <a href="{{ url_for('stats') }}">📊 Stats</a>
   </nav>
 
   <div class="container">
-    <h1 class="page-title">🎬 Films à venir</h1>
+    <h1 class="page-title">🔍 Recherche de films</h1>
 
     <div class="filter-bar">
 
@@ -26,13 +27,6 @@
         <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un film…" class="search-input">
         {% if q %}<a href="{{ update_url(q=None, page=None) }}" class="search-clear">✕</a>{% endif %}
       </form>
-
-      <div class="show-toggle">
-        <a href="{{ update_url(show='upcoming', page=None) }}"
-           class="toggle-btn {% if show == 'upcoming' %}active{% endif %}">À venir</a>
-        <a href="{{ update_url(show='all', page=None) }}"
-           class="toggle-btn {% if show == 'all' %}active{% endif %}">Tous</a>
-      </div>
 
       <div class="show-toggle">
         <a href="{{ update_url(rating='all', page=None) }}"

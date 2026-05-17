@@ -1,6 +1,6 @@
 import json
 import threading
-from datetime import date
+from datetime import date, timedelta
 from urllib.parse import urlencode
 
 from flask import Flask, render_template, redirect, url_for, request
@@ -13,6 +13,11 @@ from tmdb import fetch_genres, fetch_movie_credits, fetch_movie_trailer, fetch_m
 app = Flask(__name__)
 
 PER_PAGE = 20
+
+MONTHS_FR = [
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+]
 
 # --- Préchargement en arrière-plan ---
 
@@ -34,7 +39,7 @@ def preload_on_first_request():
             threading.Thread(target=_preload_credits, daemon=True).start()
 
 
-# --- Helper URL ---
+# --- Helpers ---
 
 @app.template_global()
 def update_url(**kwargs):
@@ -47,22 +52,72 @@ def update_url(**kwargs):
     return "?" + urlencode(params) if params else "?"
 
 
+def _week_start(d):
+    return d - timedelta(days=d.weekday())
+
+
+def _format_week(ws):
+    we = ws + timedelta(days=6)
+    if ws.month == we.month:
+        return f"Semaine du {ws.day} au {we.day} {MONTHS_FR[we.month - 1]} {we.year}"
+    return (f"Semaine du {ws.day} {MONTHS_FR[ws.month - 1]}"
+            f" au {we.day} {MONTHS_FR[we.month - 1]} {we.year}")
+
+
 # --- Routes ---
 
 @app.route("/")
 def index():
-    return redirect(url_for("recommendations"))
+    return redirect(url_for("upcoming"))
+
+
+@app.route("/upcoming")
+def upcoming():
+    all_movies = fetch_movies()
+    genres_map = fetch_genres()
+    today = date.today()
+
+    # Films à venir uniquement
+    future = [m for m in all_movies if m.get("release_date", "") >= today.isoformat()]
+
+    # Grouper par semaine
+    weeks_dict = {}
+    for movie in future:
+        ws = _week_start(date.fromisoformat(movie["release_date"]))
+        weeks_dict.setdefault(ws, []).append(movie)
+    sorted_weeks = sorted(weeks_dict.items())
+
+    # Semaine sélectionnée
+    week_idx = request.args.get("week", 0, type=int)
+    week_idx = max(0, min(week_idx, len(sorted_weeks) - 1)) if sorted_weeks else 0
+
+    if sorted_weeks:
+        selected_ws, selected_movies = sorted_weeks[week_idx]
+    else:
+        selected_ws, selected_movies = today, []
+
+    week_labels = [(i, _format_week(ws), len(movies))
+                   for i, (ws, movies) in enumerate(sorted_weeks)]
+
+    return render_template(
+        "upcoming.html",
+        week_labels=week_labels,
+        selected_week=week_idx,
+        selected_week_label=_format_week(selected_ws) if sorted_weeks else "",
+        selected_movies=selected_movies,
+        genres_map=genres_map,
+        get_preference=get_preference,
+        get_poster_url=get_poster_url,
+        get_credits=fetch_movie_credits,
+    )
 
 
 @app.route("/movies")
 def movies():
     all_movies = fetch_movies()
     genres_map = fetch_genres()
-    today = date.today().isoformat()
 
-    # Filtre passé / à venir
-    show = request.args.get("show", "upcoming")
-    display = [m for m in all_movies if m.get("release_date", "") >= today] if show == "upcoming" else all_movies
+    display = list(all_movies)
 
     # Filtre par notation
     rating_filter = request.args.get("rating", "all")
@@ -81,7 +136,7 @@ def movies():
         q_lower = q.lower()
         display = [m for m in display if q_lower in m.get("title", "").lower()]
 
-    # Genres disponibles (après les filtres précédents)
+    # Genres disponibles
     genre_ids_in_use = {g for m in display for g in m.get("genre_ids", [])}
     available_genres = sorted(
         [(gid, genres_map.get(gid, str(gid))) for gid in genre_ids_in_use],
@@ -105,7 +160,7 @@ def movies():
     page = max(1, request.args.get("page", 1, type=int))
     total_pages = max(1, (total + PER_PAGE - 1) // PER_PAGE)
     page = min(page, total_pages)
-    paged = display[(page - 1) * PER_PAGE : page * PER_PAGE]
+    paged = display[(page - 1) * PER_PAGE: page * PER_PAGE]
 
     return render_template(
         "movies.html",
@@ -114,7 +169,6 @@ def movies():
         available_genres=available_genres,
         active_genre=active_genre,
         sort=sort,
-        show=show,
         rating_filter=rating_filter,
         q=q,
         page=page,
@@ -132,7 +186,7 @@ def rate():
     choice = request.form["choice"]
     genre_ids = json.loads(request.form.get("genre_ids", "[]"))
     title = request.form.get("title", "")
-    next_url = request.form.get("next_url", url_for("movies"))
+    next_url = request.form.get("next_url", url_for("upcoming"))
 
     save_preference(movie_id, choice, genre_ids=genre_ids, title=title)
     return redirect(next_url)
@@ -170,7 +224,6 @@ def stats():
     preferences = load_preferences()
     genres_map = fetch_genres()
     data = compute_stats(preferences, genres_map)
-
     return render_template("stats.html", **data)
 
 
