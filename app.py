@@ -11,15 +11,20 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    movies = fetch_upcoming_movies()
+    return redirect(url_for("recommendations"))
+
+
+@app.route("/movies")
+def movies():
+    all_movies = fetch_upcoming_movies()
     current = int(request.args.get("index", 0))
 
-    if not movies or current >= len(movies):
-        likes = sum(1 for m in movies if get_preference(m["id"]) == "like")
-        dislikes = sum(1 for m in movies if get_preference(m["id"]) == "dislike")
-        return render_template("done.html", total=len(movies), likes=likes, dislikes=dislikes)
+    if not all_movies or current >= len(all_movies):
+        likes = sum(1 for m in all_movies if get_preference(m["id"]) == "like")
+        dislikes = sum(1 for m in all_movies if get_preference(m["id"]) == "dislike")
+        return render_template("done.html", total=len(all_movies), likes=likes, dislikes=dislikes)
 
-    movie = movies[current]
+    movie = all_movies[current]
 
     return render_template(
         "index.html",
@@ -27,7 +32,7 @@ def index():
         poster_url=get_poster_url(movie.get("poster_path")),
         preference=get_preference(movie["id"]),
         index=current,
-        total=len(movies),
+        total=len(all_movies),
     )
 
 
@@ -40,16 +45,16 @@ def rate():
     title = request.form.get("title", "")
 
     save_preference(movie_id, choice, genre_ids=genre_ids, title=title)
-    return redirect(url_for("index", index=next_index))
+    return redirect(url_for("movies", index=next_index))
 
 
 @app.route("/recommendations")
 def recommendations():
-    movies = fetch_upcoming_movies()
+    all_movies = fetch_upcoming_movies()
     preferences = load_preferences()
     genres_map = fetch_genres()
 
-    results = get_recommendations(movies, preferences, genres_map)
+    results = get_recommendations(all_movies, preferences, genres_map)
 
     return render_template(
         "recommendations.html",
@@ -62,7 +67,7 @@ def recommendations():
 
 @app.route("/reset")
 def reset():
-    return redirect(url_for("index", index=0))
+    return redirect(url_for("movies", index=0))
 
 
 if __name__ == "__main__":
