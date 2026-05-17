@@ -4,7 +4,7 @@ from flask import Flask, render_template, redirect, url_for, request
 
 from preferences import get_preference, load_preferences, save_preference
 from recommendations import get_recommendations
-from tmdb import fetch_genres, fetch_upcoming_movies, get_poster_url
+from tmdb import fetch_genres, fetch_movie_trailer, fetch_upcoming_movies, get_poster_url
 
 app = Flask(__name__)
 
@@ -17,22 +17,37 @@ def index():
 @app.route("/movies")
 def movies():
     all_movies = fetch_upcoming_movies()
-    current = int(request.args.get("index", 0))
+    genres_map = fetch_genres()
 
-    if not all_movies or current >= len(all_movies):
-        likes = sum(1 for m in all_movies if get_preference(m["id"]) == "like")
-        dislikes = sum(1 for m in all_movies if get_preference(m["id"]) == "dislike")
-        return render_template("done.html", total=len(all_movies), likes=likes, dislikes=dislikes)
+    # Genres présents dans la liste actuelle, triés alphabétiquement
+    genre_ids_in_use = {g for m in all_movies for g in m.get("genre_ids", [])}
+    available_genres = sorted(
+        [(gid, genres_map.get(gid, str(gid))) for gid in genre_ids_in_use],
+        key=lambda x: x[1],
+    )
 
-    movie = all_movies[current]
+    # Filtre par genre
+    active_genre = request.args.get("genre", type=int)
+    filtered = all_movies
+    if active_genre:
+        filtered = [m for m in all_movies if active_genre in m.get("genre_ids", [])]
+
+    # Tri
+    sort = request.args.get("sort", "release_date")
+    if sort == "vote_average":
+        filtered = sorted(filtered, key=lambda m: m.get("vote_average", 0), reverse=True)
+    elif sort == "popularity":
+        filtered = sorted(filtered, key=lambda m: m.get("popularity", 0), reverse=True)
 
     return render_template(
-        "index.html",
-        movie=movie,
-        poster_url=get_poster_url(movie.get("poster_path")),
-        preference=get_preference(movie["id"]),
-        index=current,
-        total=len(all_movies),
+        "movies.html",
+        movies=filtered,
+        genres_map=genres_map,
+        available_genres=available_genres,
+        active_genre=active_genre,
+        sort=sort,
+        get_preference=get_preference,
+        get_poster_url=get_poster_url,
     )
 
 
@@ -40,12 +55,20 @@ def movies():
 def rate():
     movie_id = request.form["movie_id"]
     choice = request.form["choice"]
-    next_index = int(request.form["next_index"])
     genre_ids = json.loads(request.form.get("genre_ids", "[]"))
     title = request.form.get("title", "")
+    next_url = request.form.get("next_url", url_for("movies"))
 
     save_preference(movie_id, choice, genre_ids=genre_ids, title=title)
-    return redirect(url_for("movies", index=next_index))
+    return redirect(next_url)
+
+
+@app.route("/trailer/<int:movie_id>")
+def trailer(movie_id):
+    url = fetch_movie_trailer(movie_id)
+    if url:
+        return redirect(url)
+    return "Aucune bande-annonce disponible.", 404
 
 
 @app.route("/recommendations")
@@ -61,13 +84,9 @@ def recommendations():
         results=results,
         genres_map=genres_map,
         get_poster_url=get_poster_url,
+        get_preference=get_preference,
         has_preferences=bool(preferences),
     )
-
-
-@app.route("/reset")
-def reset():
-    return redirect(url_for("movies", index=0))
 
 
 if __name__ == "__main__":
