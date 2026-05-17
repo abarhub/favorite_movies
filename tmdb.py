@@ -43,6 +43,19 @@ def get_poster_url(poster_path):
     return None
 
 
+def fetch_movie_trailer(movie_id):
+    for lang in ("fr-FR", "en-US"):
+        r = requests.get(
+            f"{BASE_URL}/movie/{movie_id}/videos",
+            params={"api_key": API_KEY, "language": lang},
+        )
+        r.raise_for_status()
+        for video in r.json().get("results", []):
+            if video.get("site") == "YouTube" and video.get("type") == "Trailer":
+                return f"https://www.youtube.com/watch?v={video['key']}"
+    return None
+
+
 _genres_cache = None
 
 

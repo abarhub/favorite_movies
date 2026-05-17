@@ -14,7 +14,7 @@ body {
   align-items: center;
 }
 
-/* Barre de navigation */
+/* Navbar */
 .navbar {
   width: 100%;
   background: #111;
@@ -39,118 +39,195 @@ body {
   color: #fff;
 }
 
+/* Conteneur principal */
 .container {
   width: 100%;
   max-width: 900px;
   padding: 24px;
 }
 
-/* Barre de progression */
-.progress-bar {
-  width: 100%;
-  height: 4px;
-  background: #333;
-  border-radius: 2px;
-  margin-bottom: 8px;
+.page-title {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
 }
 
-.progress-fill {
-  height: 100%;
-  background: #e50914;
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
-
-.progress-label {
-  text-align: right;
-  font-size: 0.85rem;
+.reco-subtitle {
   color: #888;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
 }
 
-/* Carte film */
-.card {
+.empty-state {
+  color: #666;
+  text-align: center;
+  margin-top: 60px;
+  line-height: 1.8;
+}
+
+/* Barre de filtres */
+.filter-bar {
   display: flex;
-  gap: 32px;
-  background: #1a1a1a;
-  border-radius: 12px;
-  overflow: hidden;
-  padding: 24px;
-}
-
-/* Affiche */
-.poster {
-  flex-shrink: 0;
-  width: 220px;
-}
-
-.poster img {
-  width: 100%;
-  border-radius: 8px;
-  display: block;
-}
-
-.no-poster {
-  width: 220px;
-  height: 330px;
-  background: #2a2a2a;
-  border-radius: 8px;
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  color: #555;
-  font-size: 0.9rem;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #1a1a1a;
+  border-radius: 10px;
 }
 
-/* Infos */
-.info {
+.genre-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   flex: 1;
+}
+
+.genre-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #2a2a2a;
+  color: #aaa;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.genre-btn:hover,
+.genre-btn.active {
+  background: #e50914;
+  color: #fff;
+}
+
+.sort-select {
+  background: #2a2a2a;
+  color: #f0f0f0;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* Liste de films */
+.movie-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-h1 {
-  font-size: 1.8rem;
-  line-height: 1.2;
+.movie-card {
+  display: flex;
+  gap: 24px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.movie-card.rated-like    { border-left-color: #27ae60; }
+.movie-card.rated-dislike { border-left-color: #e50914; }
+.movie-card.rated-skip    { border-left-color: #555; }
+
+/* Affiche */
+.reco-poster {
+  flex-shrink: 0;
+  width: 100px;
+}
+
+.reco-poster img {
+  width: 100%;
+  border-radius: 6px;
+  display: block;
+}
+
+.no-poster {
+  background: #2a2a2a;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  text-align: center;
+}
+
+.no-poster.small {
+  width: 100px;
+  height: 150px;
+  font-size: 0.75rem;
+}
+
+/* Infos film */
+.reco-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reco-info h2 {
+  font-size: 1.2rem;
+  line-height: 1.3;
 }
 
 .meta {
   display: flex;
   gap: 20px;
   color: #aaa;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .meta small {
   color: #666;
 }
 
+/* Tags de genres */
+.genre-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.genre-tag {
+  background: #2a2a2a;
+  color: #bbb;
+  font-size: 0.8rem;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.reco-why {
+  color: #f0a500;
+  font-size: 0.9rem;
+}
+
 .overview {
   color: #ccc;
   line-height: 1.7;
-  font-size: 0.95rem;
-}
-
-.already-rated {
-  color: #888;
   font-size: 0.9rem;
-  font-style: italic;
 }
 
-/* Boutons */
-.actions {
+/* Boutons d'action */
+.card-actions {
   display: flex;
-  gap: 12px;
-  margin-top: auto;
-  padding-top: 8px;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.inline-form {
+  display: flex;
+  gap: 8px;
 }
 
 .btn {
-  padding: 12px 24px;
+  padding: 8px 16px;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.9rem;
   cursor: pointer;
   font-weight: 600;
   transition: opacity 0.2s, transform 0.1s;
@@ -171,112 +248,29 @@ h1 {
 .btn-like    { background: #27ae60; color: #fff; }
 .btn-dislike { background: #e50914; color: #fff; }
 .btn-skip    { background: #444;    color: #fff; }
+.btn-trailer { background: #1a6ba0; color: #fff; }
 
-/* Page terminé */
-.done {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-}
-
-.done h1 {
-  font-size: 2.2rem;
-}
-
-.stats {
-  display: flex;
-  gap: 40px;
-  font-size: 1.3rem;
-}
-
-.stat strong {
-  font-size: 2rem;
-}
-
-/* Page recommandations */
-.page-title {
-  font-size: 1.8rem;
-  margin-bottom: 8px;
-}
-
-.reco-subtitle {
-  color: #888;
-  margin-bottom: 24px;
-  font-size: 0.95rem;
-}
-
-.empty-state {
-  color: #666;
-  text-align: center;
-  margin-top: 60px;
-  line-height: 1.8;
-}
-
-.reco-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.reco-card {
-  display: flex;
-  gap: 24px;
-  background: #1a1a1a;
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.reco-poster {
-  flex-shrink: 0;
-  width: 100px;
-}
-
-.reco-poster img {
-  width: 100%;
-  border-radius: 6px;
-  display: block;
-}
-
-.no-poster.small {
-  width: 100px;
-  height: 150px;
-  font-size: 0.75rem;
-}
-
-.reco-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.reco-info h2 {
-  font-size: 1.2rem;
-}
-
-.reco-why {
-  color: #f0a500;
-  font-size: 0.9rem;
+.btn-active {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
 }
 
 /* Responsive */
 @media (max-width: 600px) {
-  .card {
+  .movie-card {
     flex-direction: column;
   }
 
-  .poster {
+  .reco-poster {
     width: 100%;
   }
 
-  .poster img {
-    max-width: 200px;
-    margin: 0 auto;
+  .reco-poster img {
+    max-width: 120px;
   }
 
-  .actions {
+  .filter-bar {
     flex-direction: column;
+    align-items: flex-start;
   }
 }
