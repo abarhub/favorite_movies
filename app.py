@@ -4,7 +4,7 @@ from flask import Flask, render_template, redirect, url_for, request
 
 from preferences import get_preference, load_preferences, save_preference
 from recommendations import get_recommendations
-from tmdb import fetch_genres, fetch_movie_trailer, fetch_upcoming_movies, get_poster_url
+from tmdb import fetch_genres, fetch_movie_credits, fetch_movie_trailer, fetch_upcoming_movies, get_poster_url
 
 app = Flask(__name__)
 
@@ -48,6 +48,7 @@ def movies():
         sort=sort,
         get_preference=get_preference,
         get_poster_url=get_poster_url,
+        get_credits=fetch_movie_credits,
     )
 
 
@@ -85,6 +86,7 @@ def recommendations():
         genres_map=genres_map,
         get_poster_url=get_poster_url,
         get_preference=get_preference,
+        get_credits=fetch_movie_credits,
         has_preferences=bool(preferences),
     )
 

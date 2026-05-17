@@ -198,6 +198,21 @@ body {
   border-radius: 12px;
 }
 
+.credits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 0.85rem;
+}
+
+.credit-director {
+  color: #c0c0c0;
+}
+
+.credit-cast {
+  color: #999;
+}
+
 .reco-why {
   color: #f0a500;
   font-size: 0.9rem;
