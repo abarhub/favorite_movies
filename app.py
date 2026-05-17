@@ -8,7 +8,7 @@ from flask import Flask, render_template, redirect, url_for, request
 from preferences import get_preference, load_preferences, save_preference
 from recommendations import ALGORITHMS, get_recommendations
 from stats import compute_stats
-from tmdb import fetch_genres, fetch_movie_credits, fetch_movie_trailer, fetch_movies, get_poster_url
+from tmdb import fetch_genres, fetch_movie_credits, fetch_movie_details, fetch_movie_keywords, fetch_movie_trailer, fetch_movies, get_poster_url
 
 app = Flask(__name__)
 
@@ -25,9 +25,12 @@ _preload_lock = threading.Lock()
 _preload_started = False
 
 
-def _preload_credits():
+def _preload_all():
     for movie in fetch_movies():
-        fetch_movie_credits(movie["id"])
+        mid = movie["id"]
+        fetch_movie_credits(mid)
+        fetch_movie_keywords(mid)
+        fetch_movie_details(mid)
 
 
 @app.before_request
@@ -36,7 +39,7 @@ def preload_on_first_request():
     with _preload_lock:
         if not _preload_started:
             _preload_started = True
-            threading.Thread(target=_preload_credits, daemon=True).start()
+            threading.Thread(target=_preload_all, daemon=True).start()
 
 
 # --- Helpers ---
