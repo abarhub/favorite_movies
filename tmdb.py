@@ -13,13 +13,14 @@ IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 _movies_cache = None
 
 
-def fetch_upcoming_movies(days=30):
+def fetch_movies(days_back=90, days_ahead=30):
     global _movies_cache
     if _movies_cache is not None:
         return _movies_cache
 
     today = date.today()
-    end_date = today + timedelta(days=days)
+    start_date = today - timedelta(days=days_back)
+    end_date = today + timedelta(days=days_ahead)
 
     params = {
         "api_key": API_KEY,
@@ -27,13 +28,22 @@ def fetch_upcoming_movies(days=30):
         "region": "FR",
         "sort_by": "release_date.asc",
         "with_release_type": "3",
-        "release_date.gte": today.isoformat(),
+        "release_date.gte": start_date.isoformat(),
         "release_date.lte": end_date.isoformat(),
+        "page": 1,
     }
 
-    r = requests.get(f"{BASE_URL}/discover/movie", params=params)
-    r.raise_for_status()
-    _movies_cache = r.json().get("results", [])
+    all_results = []
+    while True:
+        r = requests.get(f"{BASE_URL}/discover/movie", params=params)
+        r.raise_for_status()
+        data = r.json()
+        all_results.extend(data.get("results", []))
+        if params["page"] >= data.get("total_pages", 1):
+            break
+        params["page"] += 1
+
+    _movies_cache = all_results
     return _movies_cache
 
 

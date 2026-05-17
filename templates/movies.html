@@ -16,17 +16,24 @@
     <h1 class="page-title">🎬 Films à venir</h1>
 
     <div class="filter-bar">
+      <div class="show-toggle">
+        <a href="?show=upcoming{% if active_genre %}&genre={{ active_genre }}{% endif %}&sort={{ sort }}"
+           class="toggle-btn {% if show == 'upcoming' %}active{% endif %}">À venir</a>
+        <a href="?show=all{% if active_genre %}&genre={{ active_genre }}{% endif %}&sort={{ sort }}"
+           class="toggle-btn {% if show == 'all' %}active{% endif %}">Tous les films</a>
+      </div>
+
       <div class="genre-filters">
-        <a href="?sort={{ sort }}"
-           class="genre-btn {% if not active_genre %}active{% endif %}">Tous</a>
+        <a href="?show={{ show }}&sort={{ sort }}"
+           class="genre-btn {% if not active_genre %}active{% endif %}">Tous les genres</a>
         {% for gid, gname in available_genres %}
-          <a href="?genre={{ gid }}&sort={{ sort }}"
+          <a href="?show={{ show }}&genre={{ gid }}&sort={{ sort }}"
              class="genre-btn {% if active_genre == gid %}active{% endif %}">{{ gname }}</a>
         {% endfor %}
       </div>
 
       <select class="sort-select"
-              onchange="window.location='?{% if active_genre %}genre={{ active_genre }}&{% endif %}sort='+this.value">
+              onchange="window.location='?show={{ show }}{% if active_genre %}&genre={{ active_genre }}{% endif %}&sort='+this.value">
         <option value="release_date"  {% if sort == 'release_date'  %}selected{% endif %}>Trier : Date de sortie</option>
         <option value="vote_average"  {% if sort == 'vote_average'  %}selected{% endif %}>Trier : Note</option>
         <option value="popularity"    {% if sort == 'popularity'    %}selected{% endif %}>Trier : Popularité</option>

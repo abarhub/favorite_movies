@@ -76,6 +76,31 @@ body {
   border-radius: 10px;
 }
 
+/* Toggle à venir / tous */
+.show-toggle {
+  display: flex;
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.toggle-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  color: #aaa;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.toggle-btn.active {
+  background: #e50914;
+  color: #fff;
+}
+
 .genre-filters {
   display: flex;
   flex-wrap: wrap;

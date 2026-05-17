@@ -1,10 +1,11 @@
 import json
+from datetime import date
 
 from flask import Flask, render_template, redirect, url_for, request
 
 from preferences import get_preference, load_preferences, save_preference
 from recommendations import get_recommendations
-from tmdb import fetch_genres, fetch_movie_credits, fetch_movie_trailer, fetch_upcoming_movies, get_poster_url
+from tmdb import fetch_genres, fetch_movie_credits, fetch_movie_trailer, fetch_movies, get_poster_url
 
 app = Flask(__name__)
 
@@ -16,11 +17,19 @@ def index():
 
 @app.route("/movies")
 def movies():
-    all_movies = fetch_upcoming_movies()
+    all_movies = fetch_movies()
     genres_map = fetch_genres()
+    today = date.today().isoformat()
 
-    # Genres présents dans la liste actuelle, triés alphabétiquement
-    genre_ids_in_use = {g for m in all_movies for g in m.get("genre_ids", [])}
+    # Filtre passé / à venir
+    show = request.args.get("show", "upcoming")
+    if show == "upcoming":
+        display_movies = [m for m in all_movies if m.get("release_date", "") >= today]
+    else:
+        display_movies = all_movies
+
+    # Genres présents dans la sélection courante, triés alphabétiquement
+    genre_ids_in_use = {g for m in display_movies for g in m.get("genre_ids", [])}
     available_genres = sorted(
         [(gid, genres_map.get(gid, str(gid))) for gid in genre_ids_in_use],
         key=lambda x: x[1],
@@ -28,9 +37,9 @@ def movies():
 
     # Filtre par genre
     active_genre = request.args.get("genre", type=int)
-    filtered = all_movies
+    filtered = display_movies
     if active_genre:
-        filtered = [m for m in all_movies if active_genre in m.get("genre_ids", [])]
+        filtered = [m for m in display_movies if active_genre in m.get("genre_ids", [])]
 
     # Tri
     sort = request.args.get("sort", "release_date")
@@ -46,6 +55,7 @@ def movies():
         available_genres=available_genres,
         active_genre=active_genre,
         sort=sort,
+        show=show,
         get_preference=get_preference,
         get_poster_url=get_poster_url,
         get_credits=fetch_movie_credits,
@@ -74,7 +84,7 @@ def trailer(movie_id):
 
 @app.route("/recommendations")
 def recommendations():
-    all_movies = fetch_upcoming_movies()
+    all_movies = fetch_movies()
     preferences = load_preferences()
     genres_map = fetch_genres()
 
