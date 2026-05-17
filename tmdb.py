@@ -41,3 +41,20 @@ def get_poster_url(poster_path):
     if poster_path:
         return f"{IMAGE_BASE_URL}{poster_path}"
     return None
+
+
+_genres_cache = None
+
+
+def fetch_genres():
+    global _genres_cache
+    if _genres_cache is not None:
+        return _genres_cache
+
+    r = requests.get(
+        f"{BASE_URL}/genre/movie/list",
+        params={"api_key": API_KEY, "language": "fr-FR"},
+    )
+    r.raise_for_status()
+    _genres_cache = {g["id"]: g["name"] for g in r.json().get("genres", [])}
+    return _genres_cache

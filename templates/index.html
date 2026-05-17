@@ -7,6 +7,11 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <nav class="navbar">
+    <a href="{{ url_for('index') }}">🎬 Films à venir</a>
+    <a href="{{ url_for('recommendations') }}">⭐ Recommandations</a>
+  </nav>
+
   <div class="container">
 
     <div class="progress-bar">
@@ -50,6 +55,8 @@
         <form action="/rate" method="post" class="actions">
           <input type="hidden" name="movie_id" value="{{ movie.id }}">
           <input type="hidden" name="next_index" value="{{ index + 1 }}">
+          <input type="hidden" name="genre_ids" value="{{ movie.genre_ids | tojson }}">
+          <input type="hidden" name="title" value="{{ movie.title }}">
           <button type="submit" name="choice" value="like" class="btn btn-like">👍 J'aime</button>
           <button type="submit" name="choice" value="skip" class="btn btn-skip">⏭ Passer</button>
           <button type="submit" name="choice" value="dislike" class="btn btn-dislike">👎 Je n'aime pas</button>

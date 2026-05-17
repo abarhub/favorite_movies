@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recommandations</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="{{ url_for('index') }}">🎬 Films à venir</a>
+    <a href="{{ url_for('recommendations') }}" class="active">⭐ Recommandations</a>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">⭐ Recommandations pour vous</h1>
+
+    {% if not has_preferences %}
+      <p class="empty-state">Notez quelques films d'abord pour obtenir des recommandations.</p>
+
+    {% elif not results %}
+      <p class="empty-state">Pas encore assez de données pour vous recommander des films.<br>
+      Continuez à noter des films !</p>
+
+    {% else %}
+      <p class="reco-subtitle">{{ results | length }} film(s) correspondant à vos goûts</p>
+
+      <div class="reco-list">
+        {% for item in results %}
+          {% set movie = item.movie %}
+          <div class="reco-card">
+            <div class="reco-poster">
+              {% set poster = get_poster_url(movie.poster_path) %}
+              {% if poster %}
+                <img src="{{ poster }}" alt="{{ movie.title }}">
+              {% else %}
+                <div class="no-poster small">Pas d'affiche</div>
+              {% endif %}
+            </div>
+            <div class="reco-info">
+              <h2>{{ movie.title }}</h2>
+              <div class="meta">
+                <span>📅 {{ movie.release_date }}</span>
+                <span>⭐ {{ "%.1f"|format(movie.vote_average) }}/10</span>
+              </div>
+              <p class="reco-why">
+                Recommandé car vous aimez :
+                <strong>{{ item.matching_genres | join(", ") }}</strong>
+              </p>
+              <p class="overview">{{ movie.overview or "Pas de synopsis disponible." }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>

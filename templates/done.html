@@ -7,6 +7,11 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <nav class="navbar">
+    <a href="{{ url_for('index') }}">🎬 Films à venir</a>
+    <a href="{{ url_for('recommendations') }}">⭐ Recommandations</a>
+  </nav>
+
   <div class="container done">
     <h1>🎬 Vous avez tout vu !</h1>
     <p>Sur {{ total }} film(s) à venir :</p>
