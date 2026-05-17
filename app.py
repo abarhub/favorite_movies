@@ -35,6 +35,22 @@ def movies():
         key=lambda x: x[1],
     )
 
+    # Filtre par notation
+    rating_filter = request.args.get("rating", "all")
+    if rating_filter == "like":
+        display_movies = [m for m in display_movies if get_preference(m["id"]) == "like"]
+    elif rating_filter == "dislike":
+        display_movies = [m for m in display_movies if get_preference(m["id"]) == "dislike"]
+    elif rating_filter == "unrated":
+        display_movies = [m for m in display_movies if get_preference(m["id"]) is None]
+
+    # Genres présents après filtre notation, triés alphabétiquement
+    genre_ids_in_use = {g for m in display_movies for g in m.get("genre_ids", [])}
+    available_genres = sorted(
+        [(gid, genres_map.get(gid, str(gid))) for gid in genre_ids_in_use],
+        key=lambda x: x[1],
+    )
+
     # Filtre par genre
     active_genre = request.args.get("genre", type=int)
     filtered = display_movies
@@ -56,6 +72,7 @@ def movies():
         active_genre=active_genre,
         sort=sort,
         show=show,
+        rating_filter=rating_filter,
         get_preference=get_preference,
         get_poster_url=get_poster_url,
         get_credits=fetch_movie_credits,
