@@ -17,10 +17,19 @@
   <div class="container">
     <h1 class="page-title">⭐ Recommandations pour vous</h1>
 
-    <div class="show-toggle" style="margin-bottom: 24px;">
-      <a href="?show=all"      class="toggle-btn {% if show == 'all'      %}active{% endif %}">Tous les films</a>
-      <a href="?show=upcoming" class="toggle-btn {% if show == 'upcoming' %}active{% endif %}">À venir</a>
-      <a href="?show=past"     class="toggle-btn {% if show == 'past'     %}active{% endif %}">Déjà sortis</a>
+    <div class="reco-filters">
+      <div class="show-toggle">
+        <a href="{{ update_url(show='all') }}"      class="toggle-btn {% if show == 'all'      %}active{% endif %}">Tous les films</a>
+        <a href="{{ update_url(show='upcoming') }}" class="toggle-btn {% if show == 'upcoming' %}active{% endif %}">À venir</a>
+        <a href="{{ update_url(show='past') }}"     class="toggle-btn {% if show == 'past'     %}active{% endif %}">Déjà sortis</a>
+      </div>
+
+      <div class="show-toggle">
+        {% for algo_key, algo_label in algorithms %}
+          <a href="{{ update_url(algo=algo_key) }}"
+             class="toggle-btn {% if algo == algo_key %}active{% endif %}">{{ algo_label }}</a>
+        {% endfor %}
+      </div>
     </div>
 
     {% if not has_preferences %}

@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 from flask import Flask, render_template, redirect, url_for, request
 
 from preferences import get_preference, load_preferences, save_preference
-from recommendations import get_recommendations
+from recommendations import ALGORITHMS, get_recommendations
 from stats import compute_stats
 from tmdb import fetch_genres, fetch_movie_credits, fetch_movie_trailer, fetch_movies, get_poster_url
 
@@ -215,7 +215,11 @@ def recommendations():
     else:
         filtered_movies = all_movies
 
-    results = get_recommendations(filtered_movies, preferences, genres_map)
+    algo = request.args.get("algo", "combined")
+    if algo not in {a for a, _ in ALGORITHMS}:
+        algo = "combined"
+
+    results = get_recommendations(filtered_movies, preferences, genres_map, algo=algo)
 
     return render_template(
         "recommendations.html",
@@ -226,6 +230,8 @@ def recommendations():
         get_credits=fetch_movie_credits,
         has_preferences=bool(preferences),
         show=show,
+        algo=algo,
+        algorithms=ALGORITHMS,
     )
 
 
