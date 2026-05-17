@@ -133,6 +133,59 @@ def fetch_tmdb_recommendations(movie_id):
     return movie_ids
 
 
+_keywords_cache = None
+
+
+def fetch_movie_keywords(movie_id):
+    global _keywords_cache
+    if _keywords_cache is None:
+        _keywords_cache = disk_cache.read("keywords") or {}
+
+    key = str(movie_id)
+    if key in _keywords_cache:
+        return _keywords_cache[key]
+
+    r = requests.get(
+        f"{BASE_URL}/movie/{movie_id}/keywords",
+        params={"api_key": API_KEY},
+    )
+    r.raise_for_status()
+    keywords = [kw["name"] for kw in r.json().get("keywords", [])]
+
+    _keywords_cache[key] = keywords
+    disk_cache.write("keywords", _keywords_cache)
+    return keywords
+
+
+_details_cache = None
+
+
+def fetch_movie_details(movie_id):
+    global _details_cache
+    if _details_cache is None:
+        _details_cache = disk_cache.read("details") or {}
+
+    key = str(movie_id)
+    if key in _details_cache:
+        return _details_cache[key]
+
+    r = requests.get(
+        f"{BASE_URL}/movie/{movie_id}",
+        params={"api_key": API_KEY, "language": "fr-FR"},
+    )
+    r.raise_for_status()
+    data = r.json()
+    result = {
+        "original_language": data.get("original_language", ""),
+        "production_countries": [c["name"] for c in data.get("production_countries", [])],
+        "belongs_to_collection": data.get("belongs_to_collection"),
+    }
+
+    _details_cache[key] = result
+    disk_cache.write("details", _details_cache)
+    return result
+
+
 _genres_cache = None
 
 
