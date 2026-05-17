@@ -1,14 +1,53 @@
 import json
+import threading
 from datetime import date
+from urllib.parse import urlencode
 
 from flask import Flask, render_template, redirect, url_for, request
 
 from preferences import get_preference, load_preferences, save_preference
 from recommendations import get_recommendations
+from stats import compute_stats
 from tmdb import fetch_genres, fetch_movie_credits, fetch_movie_trailer, fetch_movies, get_poster_url
 
 app = Flask(__name__)
 
+PER_PAGE = 20
+
+# --- Préchargement en arrière-plan ---
+
+_preload_lock = threading.Lock()
+_preload_started = False
+
+
+def _preload_credits():
+    for movie in fetch_movies():
+        fetch_movie_credits(movie["id"])
+
+
+@app.before_request
+def preload_on_first_request():
+    global _preload_started
+    with _preload_lock:
+        if not _preload_started:
+            _preload_started = True
+            threading.Thread(target=_preload_credits, daemon=True).start()
+
+
+# --- Helper URL ---
+
+@app.template_global()
+def update_url(**kwargs):
+    params = request.args.to_dict()
+    for k, v in kwargs.items():
+        if v is None or v == "":
+            params.pop(k, None)
+        else:
+            params[k] = str(v)
+    return "?" + urlencode(params) if params else "?"
+
+
+# --- Routes ---
 
 @app.route("/")
 def index():
@@ -23,29 +62,27 @@ def movies():
 
     # Filtre passé / à venir
     show = request.args.get("show", "upcoming")
-    if show == "upcoming":
-        display_movies = [m for m in all_movies if m.get("release_date", "") >= today]
-    else:
-        display_movies = all_movies
-
-    # Genres présents dans la sélection courante, triés alphabétiquement
-    genre_ids_in_use = {g for m in display_movies for g in m.get("genre_ids", [])}
-    available_genres = sorted(
-        [(gid, genres_map.get(gid, str(gid))) for gid in genre_ids_in_use],
-        key=lambda x: x[1],
-    )
+    display = [m for m in all_movies if m.get("release_date", "") >= today] if show == "upcoming" else all_movies
 
     # Filtre par notation
     rating_filter = request.args.get("rating", "all")
     if rating_filter == "like":
-        display_movies = [m for m in display_movies if get_preference(m["id"]) == "like"]
+        display = [m for m in display if get_preference(m["id"]) == "like"]
     elif rating_filter == "dislike":
-        display_movies = [m for m in display_movies if get_preference(m["id"]) == "dislike"]
+        display = [m for m in display if get_preference(m["id"]) == "dislike"]
+    elif rating_filter == "to_watch":
+        display = [m for m in display if get_preference(m["id"]) == "to_watch"]
     elif rating_filter == "unrated":
-        display_movies = [m for m in display_movies if get_preference(m["id"]) is None]
+        display = [m for m in display if get_preference(m["id"]) is None]
 
-    # Genres présents après filtre notation, triés alphabétiquement
-    genre_ids_in_use = {g for m in display_movies for g in m.get("genre_ids", [])}
+    # Recherche
+    q = request.args.get("q", "").strip()
+    if q:
+        q_lower = q.lower()
+        display = [m for m in display if q_lower in m.get("title", "").lower()]
+
+    # Genres disponibles (après les filtres précédents)
+    genre_ids_in_use = {g for m in display for g in m.get("genre_ids", [])}
     available_genres = sorted(
         [(gid, genres_map.get(gid, str(gid))) for gid in genre_ids_in_use],
         key=lambda x: x[1],
@@ -53,26 +90,36 @@ def movies():
 
     # Filtre par genre
     active_genre = request.args.get("genre", type=int)
-    filtered = display_movies
     if active_genre:
-        filtered = [m for m in display_movies if active_genre in m.get("genre_ids", [])]
+        display = [m for m in display if active_genre in m.get("genre_ids", [])]
 
     # Tri
     sort = request.args.get("sort", "release_date")
     if sort == "vote_average":
-        filtered = sorted(filtered, key=lambda m: m.get("vote_average", 0), reverse=True)
+        display = sorted(display, key=lambda m: m.get("vote_average", 0), reverse=True)
     elif sort == "popularity":
-        filtered = sorted(filtered, key=lambda m: m.get("popularity", 0), reverse=True)
+        display = sorted(display, key=lambda m: m.get("popularity", 0), reverse=True)
+
+    # Pagination
+    total = len(display)
+    page = max(1, request.args.get("page", 1, type=int))
+    total_pages = max(1, (total + PER_PAGE - 1) // PER_PAGE)
+    page = min(page, total_pages)
+    paged = display[(page - 1) * PER_PAGE : page * PER_PAGE]
 
     return render_template(
         "movies.html",
-        movies=filtered,
+        movies=paged,
         genres_map=genres_map,
         available_genres=available_genres,
         active_genre=active_genre,
         sort=sort,
         show=show,
         rating_filter=rating_filter,
+        q=q,
+        page=page,
+        total_pages=total_pages,
+        total=total,
         get_preference=get_preference,
         get_poster_url=get_poster_url,
         get_credits=fetch_movie_credits,
@@ -116,6 +163,15 @@ def recommendations():
         get_credits=fetch_movie_credits,
         has_preferences=bool(preferences),
     )
+
+
+@app.route("/stats")
+def stats():
+    preferences = load_preferences()
+    genres_map = fetch_genres()
+    data = compute_stats(preferences, genres_map)
+
+    return render_template("stats.html", **data)
 
 
 if __name__ == "__main__":

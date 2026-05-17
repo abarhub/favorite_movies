@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistiques</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="{{ url_for('movies') }}">🎬 Films</a>
+    <a href="{{ url_for('recommendations') }}">⭐ Recommandations</a>
+    <a href="{{ url_for('stats') }}" class="active">📊 Stats</a>
+  </nav>
+
+  <div class="container">
+    <h1 class="page-title">📊 Vos statistiques</h1>
+
+    {% if total_rated == 0 %}
+      <p class="empty-state">Notez quelques films pour voir vos statistiques.</p>
+    {% else %}
+
+      <div class="stats-summary">
+        <div class="stat-card">
+          <span class="stat-icon">👍</span>
+          <span class="stat-num">{{ counts.like }}</span>
+          <span class="stat-label">Aimés</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">👎</span>
+          <span class="stat-num">{{ counts.dislike }}</span>
+          <span class="stat-label">Non aimés</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">🔖</span>
+          <span class="stat-num">{{ counts.to_watch }}</span>
+          <span class="stat-label">À voir</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-icon">⏭</span>
+          <span class="stat-num">{{ counts.skip }}</span>
+          <span class="stat-label">Ignorés</span>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+
+        {% if top_genres %}
+        <div class="stats-block">
+          <h2>Genres préférés</h2>
+          {% for name, count, pct in top_genres %}
+            <div class="bar-row">
+              <span class="bar-label">{{ name }}</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: {{ pct }}%"></div>
+              </div>
+              <span class="bar-count">{{ count }}</span>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if top_directors %}
+        <div class="stats-block">
+          <h2>Réalisateurs</h2>
+          {% for name, count, pct in top_directors %}
+            <div class="bar-row">
+              <span class="bar-label">{{ name }}</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: {{ pct }}%"></div>
+              </div>
+              <span class="bar-count">{{ count }}</span>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if top_actors %}
+        <div class="stats-block">
+          <h2>Acteurs</h2>
+          {% for name, count, pct in top_actors %}
+            <div class="bar-row">
+              <span class="bar-label">{{ name }}</span>
+              <div class="bar-track">
+                <div class="bar-fill" style="width: {{ pct }}%"></div>
+              </div>
+              <span class="bar-count">{{ count }}</span>
+            </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
