@@ -8,8 +8,9 @@
 </head>
 <body>
   <nav class="navbar">
-    <a href="{{ url_for('movies') }}">🎬 Films à venir</a>
+    <a href="{{ url_for('movies') }}">🎬 Films</a>
     <a href="{{ url_for('recommendations') }}" class="active">⭐ Recommandations</a>
+    <a href="{{ url_for('stats') }}">📊 Stats</a>
   </nav>
 
   <div class="container">
@@ -83,6 +84,8 @@
                   <input type="hidden" name="next_url" value="{{ request.url }}">
                   <button type="submit" name="choice" value="like"
                           class="btn btn-like {% if pref == 'like' %}btn-active{% endif %}">👍</button>
+                  <button type="submit" name="choice" value="to_watch"
+                          class="btn btn-watch {% if pref == 'to_watch' %}btn-active{% endif %}">🔖</button>
                   <button type="submit" name="choice" value="skip"
                           class="btn btn-skip {% if pref == 'skip' %}btn-active{% endif %}">⏭</button>
                   <button type="submit" name="choice" value="dislike"

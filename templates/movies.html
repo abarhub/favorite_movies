@@ -8,56 +8,66 @@
 </head>
 <body>
   <nav class="navbar">
-    <a href="{{ url_for('movies') }}" class="active">🎬 Films à venir</a>
+    <a href="{{ url_for('movies') }}" class="active">🎬 Films</a>
     <a href="{{ url_for('recommendations') }}">⭐ Recommandations</a>
+    <a href="{{ url_for('stats') }}">📊 Stats</a>
   </nav>
-
-  {% set q = "show=" ~ show ~ ("&genre=" ~ active_genre if active_genre else "") ~ "&sort=" ~ sort ~ ("&rating=" ~ rating_filter if rating_filter != "all" else "") %}
 
   <div class="container">
     <h1 class="page-title">🎬 Films à venir</h1>
 
     <div class="filter-bar">
 
+      <form class="search-form" method="get" action="{{ url_for('movies') }}">
+        {% if show != 'upcoming' %}<input type="hidden" name="show" value="{{ show }}">{% endif %}
+        {% if rating_filter != 'all' %}<input type="hidden" name="rating" value="{{ rating_filter }}">{% endif %}
+        {% if active_genre %}<input type="hidden" name="genre" value="{{ active_genre }}">{% endif %}
+        {% if sort != 'release_date' %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+        <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un film…" class="search-input">
+        {% if q %}<a href="{{ update_url(q=None, page=None) }}" class="search-clear">✕</a>{% endif %}
+      </form>
+
       <div class="show-toggle">
-        <a href="?show=upcoming{% if active_genre %}&genre={{ active_genre }}{% endif %}&sort={{ sort }}{% if rating_filter != 'all' %}&rating={{ rating_filter }}{% endif %}"
+        <a href="{{ update_url(show='upcoming', page=None) }}"
            class="toggle-btn {% if show == 'upcoming' %}active{% endif %}">À venir</a>
-        <a href="?show=all{% if active_genre %}&genre={{ active_genre }}{% endif %}&sort={{ sort }}{% if rating_filter != 'all' %}&rating={{ rating_filter }}{% endif %}"
-           class="toggle-btn {% if show == 'all' %}active{% endif %}">Tous les films</a>
+        <a href="{{ update_url(show='all', page=None) }}"
+           class="toggle-btn {% if show == 'all' %}active{% endif %}">Tous</a>
       </div>
 
       <div class="show-toggle">
-        <a href="?show={{ show }}{% if active_genre %}&genre={{ active_genre }}{% endif %}&sort={{ sort }}"
+        <a href="{{ update_url(rating='all', page=None) }}"
            class="toggle-btn {% if rating_filter == 'all' %}active{% endif %}">Tous</a>
-        <a href="?show={{ show }}{% if active_genre %}&genre={{ active_genre }}{% endif %}&sort={{ sort }}&rating=like"
-           class="toggle-btn {% if rating_filter == 'like' %}active{% endif %}">👍 Aimés</a>
-        <a href="?show={{ show }}{% if active_genre %}&genre={{ active_genre }}{% endif %}&sort={{ sort }}&rating=dislike"
-           class="toggle-btn {% if rating_filter == 'dislike' %}active{% endif %}">👎 Non aimés</a>
-        <a href="?show={{ show }}{% if active_genre %}&genre={{ active_genre }}{% endif %}&sort={{ sort }}&rating=unrated"
-           class="toggle-btn {% if rating_filter == 'unrated' %}active{% endif %}">? Non notés</a>
+        <a href="{{ update_url(rating='like', page=None) }}"
+           class="toggle-btn {% if rating_filter == 'like' %}active{% endif %}">👍</a>
+        <a href="{{ update_url(rating='dislike', page=None) }}"
+           class="toggle-btn {% if rating_filter == 'dislike' %}active{% endif %}">👎</a>
+        <a href="{{ update_url(rating='to_watch', page=None) }}"
+           class="toggle-btn {% if rating_filter == 'to_watch' %}active{% endif %}">🔖</a>
+        <a href="{{ update_url(rating='unrated', page=None) }}"
+           class="toggle-btn {% if rating_filter == 'unrated' %}active{% endif %}">?</a>
       </div>
 
       <div class="genre-filters">
-        <a href="?show={{ show }}&sort={{ sort }}{% if rating_filter != 'all' %}&rating={{ rating_filter }}{% endif %}"
+        <a href="{{ update_url(genre=None, page=None) }}"
            class="genre-btn {% if not active_genre %}active{% endif %}">Tous les genres</a>
         {% for gid, gname in available_genres %}
-          <a href="?show={{ show }}&genre={{ gid }}&sort={{ sort }}{% if rating_filter != 'all' %}&rating={{ rating_filter }}{% endif %}"
+          <a href="{{ update_url(genre=gid, page=None) }}"
              class="genre-btn {% if active_genre == gid %}active{% endif %}">{{ gname }}</a>
         {% endfor %}
       </div>
 
-      <select class="sort-select"
-              onchange="window.location='?show={{ show }}{% if active_genre %}&genre={{ active_genre }}{% endif %}{% if rating_filter != 'all' %}&rating={{ rating_filter }}{% endif %}&sort='+this.value">
-        <option value="release_date"  {% if sort == 'release_date'  %}selected{% endif %}>Trier : Date de sortie</option>
-        <option value="vote_average"  {% if sort == 'vote_average'  %}selected{% endif %}>Trier : Note</option>
-        <option value="popularity"    {% if sort == 'popularity'    %}selected{% endif %}>Trier : Popularité</option>
+      <select class="sort-select" onchange="window.location=this.value">
+        <option value="{{ update_url(sort='release_date', page=None) }}" {% if sort == 'release_date' %}selected{% endif %}>Trier : Date de sortie</option>
+        <option value="{{ update_url(sort='vote_average', page=None) }}" {% if sort == 'vote_average' %}selected{% endif %}>Trier : Note</option>
+        <option value="{{ update_url(sort='popularity', page=None) }}"  {% if sort == 'popularity'  %}selected{% endif %}>Trier : Popularité</option>
       </select>
     </div>
 
     {% if not movies %}
       <p class="empty-state">Aucun film trouvé pour ces critères.</p>
     {% else %}
-      <p class="reco-subtitle">{{ movies | length }} film(s)</p>
+      <p class="reco-subtitle">{{ total }} film(s) — page {{ page }}/{{ total_pages }}</p>
+
       <div class="movie-list">
         {% for movie in movies %}
           {% set pref = get_preference(movie.id) %}
@@ -93,9 +103,7 @@
                   <span class="credit-director">🎬 {{ credits.director }}</span>
                 {% endif %}
                 {% if credits.cast %}
-                  <span class="credit-cast">
-                    🎭 {{ credits.cast | map(attribute='name') | join(', ') }}
-                  </span>
+                  <span class="credit-cast">🎭 {{ credits.cast | map(attribute='name') | join(', ') }}</span>
                 {% endif %}
               </div>
 
@@ -112,6 +120,8 @@
                   <input type="hidden" name="next_url" value="{{ request.url }}">
                   <button type="submit" name="choice" value="like"
                           class="btn btn-like {% if pref == 'like' %}btn-active{% endif %}">👍</button>
+                  <button type="submit" name="choice" value="to_watch"
+                          class="btn btn-watch {% if pref == 'to_watch' %}btn-active{% endif %}">🔖</button>
                   <button type="submit" name="choice" value="skip"
                           class="btn btn-skip {% if pref == 'skip' %}btn-active{% endif %}">⏭</button>
                   <button type="submit" name="choice" value="dislike"
@@ -122,6 +132,21 @@
           </div>
         {% endfor %}
       </div>
+
+      {% if total_pages > 1 %}
+        <div class="pagination">
+          {% if page > 1 %}
+            <a href="{{ update_url(page=page-1) }}" class="page-btn">← Précédent</a>
+          {% endif %}
+          {% for p in range(1, total_pages + 1) %}
+            <a href="{{ update_url(page=p) }}"
+               class="page-btn {% if p == page %}page-active{% endif %}">{{ p }}</a>
+          {% endfor %}
+          {% if page < total_pages %}
+            <a href="{{ update_url(page=page+1) }}" class="page-btn">Suivant →</a>
+          {% endif %}
+        </div>
+      {% endif %}
     {% endif %}
   </div>
 </body>
