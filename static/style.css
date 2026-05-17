@@ -1,0 +1,192 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0d0d0d;
+  color: #f0f0f0;
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 900px;
+  padding: 24px;
+}
+
+/* Barre de progression */
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #e50914;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-label {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 24px;
+}
+
+/* Carte film */
+.card {
+  display: flex;
+  gap: 32px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 24px;
+}
+
+/* Affiche */
+.poster {
+  flex-shrink: 0;
+  width: 220px;
+}
+
+.poster img {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+}
+
+.no-poster {
+  width: 220px;
+  height: 330px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+/* Infos */
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+h1 {
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+.meta {
+  display: flex;
+  gap: 20px;
+  color: #aaa;
+  font-size: 0.95rem;
+}
+
+.meta small {
+  color: #666;
+}
+
+.overview {
+  color: #ccc;
+  line-height: 1.7;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.already-rated {
+  color: #888;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Boutons */
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s, transform 0.1s;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-like    { background: #27ae60; color: #fff; }
+.btn-dislike { background: #e50914; color: #fff; }
+.btn-skip    { background: #444;    color: #fff; }
+
+/* Page terminé */
+.done {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.done h1 {
+  font-size: 2.2rem;
+}
+
+.stats {
+  display: flex;
+  gap: 40px;
+  font-size: 1.3rem;
+}
+
+.stat strong {
+  font-size: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .card {
+    flex-direction: column;
+  }
+
+  .poster {
+    width: 100%;
+  }
+
+  .poster img {
+    max-width: 200px;
+    margin: 0 auto;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+}

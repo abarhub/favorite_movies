@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ movie.title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+
+    <div class="progress-bar">
+      <div class="progress-fill" style="width: {{ ((index + 1) / total * 100) | round }}%"></div>
+    </div>
+    <p class="progress-label">Film {{ index + 1 }} / {{ total }}</p>
+
+    <div class="card">
+      <div class="poster">
+        {% if poster_url %}
+          <img src="{{ poster_url }}" alt="Affiche de {{ movie.title }}">
+        {% else %}
+          <div class="no-poster">Pas d'affiche</div>
+        {% endif %}
+      </div>
+
+      <div class="info">
+        <h1>{{ movie.title }}</h1>
+
+        <div class="meta">
+          <span>📅 {{ movie.release_date }}</span>
+          <span>⭐ {{ "%.1f"|format(movie.vote_average) }}/10
+            <small>({{ movie.vote_count }} votes)</small>
+          </span>
+        </div>
+
+        <p class="overview">
+          {{ movie.overview or "Pas de synopsis disponible." }}
+        </p>
+
+        {% if preference %}
+          <p class="already-rated">
+            Déjà noté :
+            {% if preference == "like" %}👍 J'aime
+            {% elif preference == "dislike" %}👎 Je n'aime pas
+            {% else %}⏭ Ignoré
+            {% endif %}
+          </p>
+        {% endif %}
+
+        <form action="/rate" method="post" class="actions">
+          <input type="hidden" name="movie_id" value="{{ movie.id }}">
+          <input type="hidden" name="next_index" value="{{ index + 1 }}">
+          <button type="submit" name="choice" value="like" class="btn btn-like">👍 J'aime</button>
+          <button type="submit" name="choice" value="skip" class="btn btn-skip">⏭ Passer</button>
+          <button type="submit" name="choice" value="dislike" class="btn btn-dislike">👎 Je n'aime pas</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
