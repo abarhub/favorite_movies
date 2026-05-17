@@ -143,7 +143,7 @@ def fetch_genres():
 
     cached = disk_cache.read("genres", ttl=disk_cache.THIRTY_DAYS)
     if cached is not None:
-        _genres_cache = cached
+        _genres_cache = {int(k): v for k, v in cached.items()}
         return _genres_cache
 
     r = requests.get(
