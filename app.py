@@ -205,8 +205,17 @@ def recommendations():
     all_movies = fetch_movies()
     preferences = load_preferences()
     genres_map = fetch_genres()
+    today = date.today().isoformat()
 
-    results = get_recommendations(all_movies, preferences, genres_map)
+    show = request.args.get("show", "all")
+    if show == "upcoming":
+        filtered_movies = [m for m in all_movies if m.get("release_date", "") >= today]
+    elif show == "past":
+        filtered_movies = [m for m in all_movies if m.get("release_date", "") < today]
+    else:
+        filtered_movies = all_movies
+
+    results = get_recommendations(filtered_movies, preferences, genres_map)
 
     return render_template(
         "recommendations.html",
@@ -216,6 +225,7 @@ def recommendations():
         get_preference=get_preference,
         get_credits=fetch_movie_credits,
         has_preferences=bool(preferences),
+        show=show,
     )
 
 

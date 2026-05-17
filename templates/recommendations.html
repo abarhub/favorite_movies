@@ -17,6 +17,12 @@
   <div class="container">
     <h1 class="page-title">⭐ Recommandations pour vous</h1>
 
+    <div class="show-toggle" style="margin-bottom: 24px;">
+      <a href="?show=all"      class="toggle-btn {% if show == 'all'      %}active{% endif %}">Tous les films</a>
+      <a href="?show=upcoming" class="toggle-btn {% if show == 'upcoming' %}active{% endif %}">À venir</a>
+      <a href="?show=past"     class="toggle-btn {% if show == 'past'     %}active{% endif %}">Déjà sortis</a>
+    </div>
+
     {% if not has_preferences %}
       <p class="empty-state">Notez quelques films d'abord pour obtenir des recommandations.</p>
 
