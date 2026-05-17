@@ -4,6 +4,8 @@ from datetime import date, timedelta
 import requests
 from dotenv import load_dotenv
 
+import cache as disk_cache
+
 load_dotenv()
 
 API_KEY = os.getenv("API_TOKEN")
@@ -16,6 +18,11 @@ _movies_cache = None
 def fetch_movies(days_back=90, days_ahead=30):
     global _movies_cache
     if _movies_cache is not None:
+        return _movies_cache
+
+    cached = disk_cache.read("movies", ttl=disk_cache.TWELVE_HOURS)
+    if cached is not None:
+        _movies_cache = cached
         return _movies_cache
 
     today = date.today()
@@ -44,6 +51,7 @@ def fetch_movies(days_back=90, days_ahead=30):
         params["page"] += 1
 
     _movies_cache = all_results
+    disk_cache.write("movies", _movies_cache)
     return _movies_cache
 
 
@@ -66,12 +74,17 @@ def fetch_movie_trailer(movie_id):
     return None
 
 
-_credits_cache = {}
+_credits_cache = None
 
 
 def fetch_movie_credits(movie_id):
-    if movie_id in _credits_cache:
-        return _credits_cache[movie_id]
+    global _credits_cache
+    if _credits_cache is None:
+        _credits_cache = disk_cache.read("credits") or {}
+
+    key = str(movie_id)
+    if key in _credits_cache:
+        return _credits_cache[key]
 
     r = requests.get(
         f"{BASE_URL}/movie/{movie_id}/credits",
@@ -90,16 +103,23 @@ def fetch_movie_credits(movie_id):
     ]
 
     result = {"director": director, "cast": cast}
-    _credits_cache[movie_id] = result
+    _credits_cache[key] = result
+    disk_cache.write("credits", _credits_cache)
     return result
 
 
-_tmdb_reco_cache = {}
+_tmdb_reco_cache = None
 
 
 def fetch_tmdb_recommendations(movie_id):
-    if movie_id in _tmdb_reco_cache:
-        return _tmdb_reco_cache[movie_id]
+    global _tmdb_reco_cache
+    if _tmdb_reco_cache is None:
+        saved = disk_cache.read("tmdb_reco") or {}
+        _tmdb_reco_cache = {k: set(v) for k, v in saved.items()}
+
+    key = str(movie_id)
+    if key in _tmdb_reco_cache:
+        return _tmdb_reco_cache[key]
 
     r = requests.get(
         f"{BASE_URL}/movie/{movie_id}/recommendations",
@@ -107,7 +127,9 @@ def fetch_tmdb_recommendations(movie_id):
     )
     r.raise_for_status()
     movie_ids = {m["id"] for m in r.json().get("results", [])}
-    _tmdb_reco_cache[movie_id] = movie_ids
+
+    _tmdb_reco_cache[key] = movie_ids
+    disk_cache.write("tmdb_reco", {k: list(v) for k, v in _tmdb_reco_cache.items()})
     return movie_ids
 
 
@@ -119,10 +141,16 @@ def fetch_genres():
     if _genres_cache is not None:
         return _genres_cache
 
+    cached = disk_cache.read("genres", ttl=disk_cache.THIRTY_DAYS)
+    if cached is not None:
+        _genres_cache = cached
+        return _genres_cache
+
     r = requests.get(
         f"{BASE_URL}/genre/movie/list",
         params={"api_key": API_KEY, "language": "fr-FR"},
     )
     r.raise_for_status()
     _genres_cache = {g["id"]: g["name"] for g in r.json().get("genres", [])}
+    disk_cache.write("genres", _genres_cache)
     return _genres_cache
