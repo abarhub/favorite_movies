@@ -297,6 +297,49 @@ body {
   outline-offset: 2px;
 }
 
+/* Sélecteur de semaine */
+.week-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.week-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #1a1a1a;
+  border-radius: 10px;
+  color: #aaa;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background 0.2s, color 0.2s;
+  border: 2px solid transparent;
+}
+
+.week-btn:hover { background: #2a2a2a; color: #fff; }
+.week-btn.active { border-color: #e50914; color: #fff; background: #2a2a2a; }
+
+.week-count {
+  background: #333;
+  color: #aaa;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+}
+
+.week-btn.active .week-count { background: #e50914; color: #fff; }
+
+.week-title {
+  font-size: 1.2rem;
+  color: #aaa;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
 /* Recherche */
 .search-form {
   display: flex;
